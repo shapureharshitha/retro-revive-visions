@@ -6,17 +6,27 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import ImageUpload from './ImageUpload';
 import ImageComparison from './ImageComparison';
+import ColorPalette from './ColorPalette';
 import { colorizeImage } from '@/utils/colorizeUtils';
 
 const PhotoColorizer = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [colorizedImage, setColorizedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedColors, setSelectedColors] = useState<string[]>(['#FF0000', '#0000FF', '#00FF00']);
   const { toast } = useToast();
 
   const handleImageUpload = (imageUrl: string) => {
     setOriginalImage(imageUrl);
     setColorizedImage(null);
+  };
+
+  const handleColorToggle = (color: string) => {
+    setSelectedColors(prev => 
+      prev.includes(color) 
+        ? prev.filter(c => c !== color)
+        : [...prev, color]
+    );
   };
 
   const handleColorize = async () => {
@@ -29,13 +39,22 @@ const PhotoColorizer = () => {
       return;
     }
 
+    if (selectedColors.length === 0) {
+      toast({
+        title: "No colors selected",
+        description: "Please select at least one color for colorization",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const colorized = await colorizeImage(originalImage);
+      const colorized = await colorizeImage(originalImage, selectedColors);
       setColorizedImage(colorized);
       toast({
         title: "Success!",
-        description: "Your photo has been colorized successfully",
+        description: `Your photo has been colorized using ${selectedColors.length} colors`,
       });
     } catch (error) {
       toast({
@@ -72,10 +91,15 @@ const PhotoColorizer = () => {
               
               <ImageUpload onImageUpload={handleImageUpload} />
               
+              <ColorPalette 
+                selectedColors={selectedColors}
+                onColorToggle={handleColorToggle}
+              />
+              
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   onClick={handleColorize}
-                  disabled={!originalImage || isProcessing}
+                  disabled={!originalImage || isProcessing || selectedColors.length === 0}
                   className="flex-1 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
                 >
                   {isProcessing ? (
