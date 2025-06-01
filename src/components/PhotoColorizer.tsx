@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Upload, Download, Sparkles, Image as ImageIcon, Loader2, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ const PhotoColorizer = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [colorizedImage, setColorizedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedColors, setSelectedColors] = useState<string[]>(['#FF0000', '#0000FF', '#00FF00']);
+  const [selectedColors, setSelectedColors] = useState<string[]>(['#FF0040', '#0080FF', '#32CD32']);
   const { toast } = useToast();
 
   const handleImageUpload = (imageUrl: string) => {
@@ -136,16 +135,10 @@ const PhotoColorizer = () => {
               
               <ImageUpload onImageUpload={handleImageUpload} />
               
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 justify-center">
-                  <Palette className="w-5 h-5 text-white" />
-                  <h3 className="text-white font-semibold">Choose Colors</h3>
-                </div>
-                <ColorPalette 
-                  selectedColors={selectedColors}
-                  onColorToggle={handleColorToggle}
-                />
-              </div>
+              <ColorPalette 
+                selectedColors={selectedColors}
+                onColorToggle={handleColorToggle}
+              />
               
               <div className="flex flex-col gap-4">
                 <Button
