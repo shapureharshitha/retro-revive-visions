@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import ImageUpload from './ImageUpload';
 import ImageComparison from './ImageComparison';
 import ColorPalette from './ColorPalette';
+import ProcessingSteps from './ProcessingSteps';
+import ColorMetrics from './ColorMetrics';
 import { colorizeImage } from '@/utils/colorizeUtils';
 
 const PhotoColorizer = () => {
@@ -13,11 +15,34 @@ const PhotoColorizer = () => {
   const [colorizedImage, setColorizedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedColors, setSelectedColors] = useState<string[]>(['#FF0040', '#0080FF', '#32CD32']);
+  const [processingTime, setProcessingTime] = useState<number | undefined>();
   const { toast } = useToast();
+
+  const processingSteps = [
+    {
+      id: '1',
+      title: 'Image Analysis',
+      description: 'Analyzing image structure and luminance',
+      status: isProcessing ? 'processing' : 'pending'
+    },
+    {
+      id: '2', 
+      title: 'Color Prediction',
+      description: 'AI predicting ab color channels',
+      status: isProcessing ? 'processing' : 'pending'
+    },
+    {
+      id: '3',
+      title: 'Lab to RGB Conversion',
+      description: 'Converting to displayable RGB format',
+      status: isProcessing ? 'processing' : 'pending'
+    }
+  ];
 
   const handleImageUpload = (imageUrl: string) => {
     setOriginalImage(imageUrl);
     setColorizedImage(null);
+    setProcessingTime(undefined);
   };
 
   const handleColorToggle = (color: string) => {
@@ -48,12 +73,19 @@ const PhotoColorizer = () => {
     }
 
     setIsProcessing(true);
+    const startTime = Date.now();
+    
     try {
       const colorized = await colorizeImage(originalImage, selectedColors);
+      const endTime = Date.now();
+      const duration = Math.round((endTime - startTime) / 1000);
+      
       setColorizedImage(colorized);
+      setProcessingTime(duration);
+      
       toast({
         title: "Success!",
-        description: `Your photo has been colorized using ${selectedColors.length} colors`,
+        description: `Your photo has been colorized using ${selectedColors.length} colors in ${duration}s`,
       });
     } catch (error) {
       toast({
@@ -77,7 +109,6 @@ const PhotoColorizer = () => {
     }
     
     try {
-      // Create a temporary canvas to ensure proper image format
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
@@ -87,12 +118,11 @@ const PhotoColorizer = () => {
         canvas.height = img.height;
         ctx?.drawImage(img, 0, 0);
         
-        // Convert to blob and download
         canvas.toBlob((blob) => {
           if (blob) {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.download = `colorized-photo-${Date.now()}.png`;
+            link.download = `retro-revive-${Date.now()}.png`;
             link.href = url;
             document.body.appendChild(link);
             link.click();
@@ -121,7 +151,8 @@ const PhotoColorizer = () => {
     <div className="max-w-7xl mx-auto space-y-8">
       <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
         <CardContent className="p-8">
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Upload and Controls */}
             <div className="space-y-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -129,16 +160,13 @@ const PhotoColorizer = () => {
                 </div>
                 <h2 className="text-2xl font-semibold text-white mb-4">Upload Your Photo</h2>
                 <p className="text-blue-200 mb-6">
-                  Drag and drop your black and white photo or click to browse
+                  Transform black and white memories with Retro Revive Visions
                 </p>
               </div>
               
               <ImageUpload onImageUpload={handleImageUpload} />
-              
-              <ColorPalette 
-                selectedColors={selectedColors}
-                onColorToggle={handleColorToggle}
-              />
+              <ColorPalette selectedColors={selectedColors} onColorToggle={handleColorToggle} />
+              <ColorMetrics selectedColors={selectedColors} processingTime={processingTime} />
               
               <div className="flex flex-col gap-4">
                 <Button
@@ -171,8 +199,13 @@ const PhotoColorizer = () => {
                   Download Colorized Image
                 </Button>
               </div>
+            </div>
+
+            {/* Processing Steps */}
+            <div className="space-y-6">
+              {isProcessing && <ProcessingSteps steps={processingSteps} />}
               
-              {originalImage && (
+              {originalImage && !isProcessing && (
                 <div className="bg-white/10 rounded-lg p-4 border border-white/20">
                   <p className="text-blue-200 text-sm text-center">
                     📸 Image uploaded • 🎨 {selectedColors.length} colors selected
@@ -182,6 +215,7 @@ const PhotoColorizer = () => {
               )}
             </div>
 
+            {/* Results */}
             <div className="space-y-6">
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -189,7 +223,7 @@ const PhotoColorizer = () => {
                 </div>
                 <h2 className="text-2xl font-semibold text-white mb-4">Results</h2>
                 <p className="text-blue-200 mb-6">
-                  See the magic of AI colorization in action
+                  See your memories come to life in vivid color
                 </p>
               </div>
               
@@ -203,6 +237,7 @@ const PhotoColorizer = () => {
         </CardContent>
       </Card>
 
+      {/* How It Works Section */}
       <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
         <CardContent className="p-8">
           <div className="text-center">
